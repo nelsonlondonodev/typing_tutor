@@ -7,13 +7,28 @@ const ppmEl = document.getElementById("ppm");
 const precisionEl = document.getElementById("precision");
 const erroresEl = document.getElementById("errores");
 
-// --- TEXTOS DE PRÁCTICA ---
+// --- TEXTOS DE PRÁCTICA (AMPLIADO) ---
 const textos = [
   "La tecnología es la aplicación de la ciencia a la resolución de problemas concretos.",
   "El rápido zorro marrón salta sobre el perro perezoso. Esta frase contiene todas las letras del alfabeto.",
   "Programar puede ser un desafío, pero también es una de las habilidades más gratificantes que puedes aprender.",
   "La práctica constante es la clave para mejorar la velocidad y la precisión en la mecanografía.",
   "Un buen programador mira hacia ambos lados antes de cruzar una calle de un solo sentido.",
+  "El arte de la vida consiste en hacer de la vida una obra de arte. (Mahatma Gandhi)",
+  "La imaginación es más importante que el conocimiento. El conocimiento es limitado, la imaginación rodea el mundo. (Albert Einstein)",
+  "El éxito es la suma de pequeños esfuerzos repetidos día tras día. (Robert Collier)",
+  "No cuentes los días, haz que los días cuenten. (Muhammad Ali)",
+  "El único modo de hacer un gran trabajo es amar lo que haces. (Steve Jobs)",
+  "En boca cerrada no entran moscas, pero tampoco salen grandes ideas.",
+  "El que madruga, encuentra todo cerrado. ¡Es una broma! O quizás no.",
+  "La vida es como una bicicleta: para mantener el equilibrio, debes seguir moviéndote.",
+  "Pregúntate si lo que estás haciendo hoy te acerca al lugar en el que quieres estar mañana.",
+  "La mejor forma de predecir el futuro es crearlo. (Peter Drucker)",
+  "El usuario deberá teclear este texto con una velocidad de 120 PPM y una precisión del 98%.",
+  "El archivo se guardó en C:\\Usuarios\\Documentos\\Proyecto_Final_2024.docx",
+  "¿Podrías, por favor, enviarme el reporte antes de las 17:00? ¡Gracias!",
+  "La reunión será el próximo jueves a las 10:30 a.m. en la sala de juntas (piso 3).",
+  "El código de acceso es: #A8B-4C/2D. No lo compartas con nadie.",
 ];
 
 // --- VARIABLES DE ESTADO DE LA APLICACIÓN ---
