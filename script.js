@@ -6,6 +6,10 @@ const tiempoEl = document.getElementById("tiempo");
 const ppmEl = document.getElementById("ppm");
 const precisionEl = document.getElementById("precision");
 const erroresEl = document.getElementById("errores");
+const ultimoResultadoContainer = document.getElementById(
+  "ultimo-resultado-container"
+);
+const ultimoResultadoTexto = document.getElementById("ultimo-resultado-texto");
 
 // --- TEXTOS DE PRÁCTICA (AMPLIADO) ---
 const textos = [
@@ -83,98 +87,70 @@ function iniciarNuevaPrueba() {
  * Compara la tecla presionada con el caracter esperado y actualiza la UI.
  */
 function manejarEntrada(e) {
-  // En el código original, se usaba e.preventDefault() que podía interferir con
-  // la entrada normal de texto en algunos navegadores. Lo eliminamos para
-  // un comportamiento más estándar y nos centramos en el evento 'keydown'.
   const teclaPresionada = e.key;
 
-  // Iniciar el cronómetro con la primera tecla válida
-  if (!pruebaActiva && teclaPresionada.length === 1) {
+  if (
+    !pruebaActiva &&
+    teclaPresionada.length === 1 &&
+    teclaPresionada !== "Backspace"
+  ) {
     pruebaActiva = true;
     tiempoInicio = new Date();
     intervaloTiempo = setInterval(actualizarTiempo, 1000);
   }
 
-  // Salir si la prueba no está activa
   if (!pruebaActiva) return;
 
   const spans = textoContainer.children;
+
+  // Lógica de Borrado (Backspace)
+  if (teclaPresionada === "Backspace") {
+    e.preventDefault();
+    if (indiceActual > 0) {
+      if (spans[indiceActual]) spans[indiceActual].classList.remove("cursor");
+      indiceActual--;
+      spans[indiceActual].classList.remove("correcto", "incorrecto");
+      spans[indiceActual].classList.add("cursor");
+      actualizarEstadisticas();
+    }
+    return;
+  }
+
+  if (teclaPresionada.length > 1) return;
+  if (indiceActual >= textoActual.length) return;
+
   const caracterEsperado = textoActual[indiceActual];
 
-  // --- Lógica de Borrado (Backspace) ---
-  if (teclaPresionada === "Backspace") {
-    e.preventDefault(); // Prevenir navegación
-    if (indiceActual > 0) {
-      // Quitar cursor de la posición actual
-      if (spans[indiceActual]) {
-        spans[indiceActual].classList.remove("cursor");
-      } else if (spans[indiceActual - 1]) {
-        // Caso borde: al final del texto
-        spans[indiceActual - 1].classList.remove("cursor");
-      }
-
-      // Mover el índice hacia atrás
-      indiceActual--;
-
-      // Si la letra anterior fue incorrecta y se borró, descontar el error
-      if (spans[indiceActual].classList.contains("incorrecto")) {
-        // No es necesario descontar errores, la precisión se recalcula
-      }
-
-      // Limpiar el formato de la letra anterior
-      spans[indiceActual].classList.remove("correcto", "incorrecto");
-
-      // Poner el cursor en la nueva posición
-      spans[indiceActual].classList.add("cursor");
-    }
-    actualizarEstadisticas();
-    return;
-  }
-
-  // Ignorar teclas de control que no sean letras o símbolos comunes (ej. Shift, Ctrl)
-  if (teclaPresionada.length > 1) {
-    return;
-  }
-
-  // Evitar que el usuario siga escribiendo si ya terminó el texto
-  if (indiceActual >= textoActual.length) {
-    return;
-  }
-
-  // --- Lógica de Escritura ---
+  // Lógica de Escritura
   if (teclaPresionada === caracterEsperado) {
     spans[indiceActual].classList.add("correcto");
-    spans[indiceActual].classList.remove("incorrecto");
   } else {
     spans[indiceActual].classList.add("incorrecto");
-    spans[indiceActual].classList.remove("correcto");
     errores++;
   }
 
-  // Mover el cursor
   spans[indiceActual].classList.remove("cursor");
   indiceActual++;
-
-  // Actualizar estadísticas en cada pulsación
   actualizarEstadisticas();
 
   // Comprobar si la prueba ha terminado
   if (indiceActual === textoActual.length) {
-    clearInterval(intervaloTiempo); // Detener el cronómetro
+    clearInterval(intervaloTiempo);
     pruebaActiva = false;
+    guardarResultado(); // Guardar el resultado al finalizar
   } else {
-    spans[indiceActual].classList.add("cursor"); // Mover cursor al siguiente
+    spans[indiceActual].classList.add("cursor");
   }
 }
 
 /**
- * Actualiza el cronómetro en la pantalla.
+ * Actualiza el cronómetro y las estadísticas en pantalla.
  */
 function actualizarTiempo() {
   if (!tiempoInicio) return;
   const segundos = Math.floor((new Date() - tiempoInicio) / 1000);
   tiempoEl.innerText = `${segundos}s`;
-  actualizarEstadisticas(); // Actualizar PPM con el tiempo
+  actualizarEstadisticas();
 }
 
 /**
@@ -186,8 +162,6 @@ function actualizarEstadisticas() {
     : 0;
   const minutosTranscurridos = segundosTranscurridos / 60;
 
-  // Calcular Palabras por Minuto (PPM)
-  // Se considera una palabra como 5 caracteres (incluyendo espacios)
   const caracteresCorrectos = indiceActual - errores;
   const ppm =
     minutosTranscurridos > 0
@@ -199,7 +173,6 @@ function actualizarEstadisticas() {
       : 0;
   ppmEl.innerText = ppm;
 
-  // Calcular Precisión
   const precision =
     indiceActual > 0
       ? Math.round(
@@ -209,15 +182,46 @@ function actualizarEstadisticas() {
       : 100;
   precisionEl.innerText = `${precision}%`;
 
-  // Actualizar Errores
   erroresEl.innerText = errores;
 }
 
+/**
+ * Guarda el resultado final en localStorage.
+ */
+function guardarResultado() {
+  const resultado = {
+    ppm: ppmEl.innerText,
+    precision: precisionEl.innerText,
+    errores: erroresEl.innerText,
+    tiempo: tiempoEl.innerText,
+  };
+  // Convertimos el objeto a un string JSON para guardarlo
+  localStorage.setItem("ultimoResultadoTypingTutor", JSON.stringify(resultado));
+}
+
+/**
+ * Carga y muestra el último resultado desde localStorage al iniciar.
+ */
+function cargarUltimoResultado() {
+  const resultadoGuardado = localStorage.getItem("ultimoResultadoTypingTutor");
+  if (resultadoGuardado) {
+    const resultado = JSON.parse(resultadoGuardado);
+    ultimoResultadoTexto.innerHTML = `
+            <span class="font-semibold text-white">${resultado.ppm}</span> PPM, 
+            <span class="font-semibold text-white">${resultado.precision}</span> de precisión, 
+            <span class="font-semibold text-white">${resultado.errores}</span> errores en 
+            <span class="font-semibold text-white">${resultado.tiempo}</span>.
+        `;
+    ultimoResultadoContainer.classList.remove("hidden");
+  }
+}
+
 // --- EVENT LISTENERS ---
-// Cambiamos a 'keydown' para un mejor control de teclas como Backspace
 entradaUsuario.addEventListener("keydown", manejarEntrada);
 reiniciarBtn.addEventListener("click", iniciarNuevaPrueba);
 
 // --- INICIO DE LA APLICACIÓN ---
-// Cargar la primera prueba cuando la página esté lista
-document.addEventListener("DOMContentLoaded", iniciarNuevaPrueba);
+document.addEventListener("DOMContentLoaded", () => {
+  cargarUltimoResultado(); // Cargar el último resultado al iniciar
+  iniciarNuevaPrueba(); // Iniciar la primera prueba
+});
