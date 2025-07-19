@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tutor de Mecanografía</title>
+    <!-- Cargamos Tailwind CSS para un diseño rápido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Cargamos la fuente Inter de Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Usaremos la fuente Inter para un look más limpio */
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      /* Estilos para el feedback visual del texto */
+      #texto-a-escribir span {
+        transition: color 0.2s, background-color 0.2s;
+      }
+
+      /* Letra correcta: color verde */
+      .correcto {
+        color: #4ade80; /* green-400 de Tailwind */
+      }
+
+      /* Letra incorrecta: color rojo y subrayado */
+      .incorrecto {
+        color: #f87171; /* red-400 de Tailwind */
+        text-decoration: underline;
+        text-decoration-color: #f87171;
+      }
+
+      /* Cursor que indica la posición actual */
+      .cursor {
+        background-color: #38bdf8; /* light-blue-400 de Tailwind */
+        border-radius: 2px;
+        animation: blink 1s infinite;
+      }
+
+      /* Animación de parpadeo para el cursor */
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen"
+    onclick="document.getElementById('entrada-usuario').focus()"
+  >
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-teal-400">
+        Tutor de Mecanografía
+      </h1>
+      <p class="text-gray-400 mb-8">
+        Haz clic aquí y empieza a escribir para comenzar la prueba.
+      </p>
+
+      <div
+        id="texto-a-escribir"
+        class="text-2xl md:text-3xl leading-relaxed bg-gray-800 p-6 rounded-lg shadow-lg mb-8 font-mono tracking-wider text-left"
+      >
+        <!-- El texto de práctica se cargará aquí -->
+      </div>
+
+      <!-- Área de entrada de texto oculta -->
+      <textarea
+        id="entrada-usuario"
+        class="opacity-0 absolute w-0 h-0"
+        autofocus
+      ></textarea>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-8">
+        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+          <p class="text-gray-400 text-sm">Tiempo</p>
+          <p id="tiempo" class="text-3xl font-bold">0s</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+          <p class="text-gray-400 text-sm">PPM</p>
+          <p id="ppm" class="text-3xl font-bold">0</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+          <p class="text-gray-400 text-sm">Precisión</p>
+          <p id="precision" class="text-3xl font-bold">100%</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+          <p class="text-gray-400 text-sm">Errores</p>
+          <p id="errores" class="text-3xl font-bold">0</p>
+        </div>
+      </div>
+
+      <button
+        id="reiniciar-btn"
+        class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none"
+      >
+        Reiniciar Prueba
+      </button>
+    </div>
+
+    <script>
+      // --- SELECCIÓN DE ELEMENTOS DEL DOM ---
+      const textoContainer = document.getElementById("texto-a-escribir");
+      const entradaUsuario = document.getElementById("entrada-usuario");
+      const reiniciarBtn = document.getElementById("reiniciar-btn");
+      const tiempoEl = document.getElementById("tiempo");
+      const ppmEl = document.getElementById("ppm");
+      const precisionEl = document.getElementById("precision");
+      const erroresEl = document.getElementById("errores");
+
+      // --- TEXTOS DE PRÁCTICA ---
+      const textos = [
+        "La tecnología es la aplicación de la ciencia a la resolución de problemas concretos.",
+        "El rápido zorro marrón salta sobre el perro perezoso. Esta frase contiene todas las letras del alfabeto.",
+        "Programar puede ser un desafío, pero también es una de las habilidades más gratificantes que puedes aprender.",
+        "La práctica constante es la clave para mejorar la velocidad y la precisión en la mecanografía.",
+        "Un buen programador mira hacia ambos lados antes de cruzar una calle de un solo sentido.",
+      ];
+
+      // --- VARIABLES DE ESTADO DE LA APLICACIÓN ---
+      let textoActual = "";
+      let indiceActual = 0;
+      let errores = 0;
+      let tiempoInicio;
+      let intervaloTiempo;
+      let pruebaActiva = false;
+
+      // --- FUNCIONES PRINCIPALES ---
+
+      /**
+       * Inicia una nueva prueba de mecanografía.
+       * Selecciona un texto al azar, lo muestra en pantalla y resetea las estadísticas.
+       */
+      function iniciarNuevaPrueba() {
+        // Detener cualquier prueba anterior
+        clearInterval(intervaloTiempo);
+        pruebaActiva = false;
+
+        // Seleccionar un texto aleatorio y limpiar el contenedor
+        textoActual = textos[Math.floor(Math.random() * textos.length)];
+        textoContainer.innerHTML = "";
+
+        // Convertir el texto en spans individuales para cada caracter
+        textoActual.split("").forEach((caracter) => {
+          const span = document.createElement("span");
+          span.innerText = caracter;
+          textoContainer.appendChild(span);
+        });
+
+        // Resetear variables y estadísticas
+        indiceActual = 0;
+        errores = 0;
+        tiempoInicio = null;
+        entradaUsuario.value = "";
+        actualizarEstadisticas();
+
+        // Poner el cursor en la primera letra
+        textoContainer.children[0].classList.add("cursor");
+
+        // Asegurarse de que el área de texto esté enfocada
+        entradaUsuario.focus();
+      }
+
+      /**
+       * Maneja el evento de presionar una tecla.
+       * Compara la tecla presionada con el caracter esperado y actualiza la UI.
+       */
+      function manejarEntrada(e) {
+        // Prevenir comportamientos por defecto como tabular fuera del área
+        e.preventDefault();
+        const teclaPresionada = e.key;
+
+        // Ignorar teclas especiales excepto Backspace
+        if (teclaPresionada.length > 1 && teclaPresionada !== "Backspace") {
+          return;
+        }
+
+        // Iniciar el cronómetro con la primera tecla válida
+        if (!pruebaActiva && teclaPresionada !== "Backspace") {
+          pruebaActiva = true;
+          tiempoInicio = new Date();
+          intervaloTiempo = setInterval(actualizarTiempo, 1000);
+        }
+
+        if (!pruebaActiva) return;
+
+        const spans = textoContainer.children;
+        const spanActual = spans[indiceActual];
+        const caracterEsperado = textoActual[indiceActual];
+
+        // --- Lógica de Borrado (Backspace) ---
+        if (teclaPresionada === "Backspace") {
+          if (indiceActual > 0) {
+            // Quitar cursor de la posición actual
+            spanActual.classList.remove("cursor");
+            // Mover el índice hacia atrás
+            indiceActual--;
+            // Limpiar el formato de la letra anterior
+            spans[indiceActual].classList.remove("correcto", "incorrecto");
+            // Poner el cursor en la nueva posición
+            spans[indiceActual].classList.add("cursor");
+          }
+          return; // Salir de la función después de borrar
+        }
+
+        // --- Lógica de Escritura ---
+        if (teclaPresionada === caracterEsperado) {
+          spanActual.classList.add("correcto");
+          spanActual.classList.remove("incorrecto");
+        } else {
+          spanActual.classList.add("incorrecto");
+          spanActual.classList.remove("correcto");
+          errores++;
+        }
+
+        // Mover el cursor
+        spanActual.classList.remove("cursor");
+        indiceActual++;
+
+        // Actualizar estadísticas en cada pulsación
+        actualizarEstadisticas();
+
+        // Comprobar si la prueba ha terminado
+        if (indiceActual === textoActual.length) {
+          clearInterval(intervaloTiempo); // Detener el cronómetro
+          pruebaActiva = false;
+        } else {
+          spans[indiceActual].classList.add("cursor"); // Mover cursor al siguiente
+        }
+      }
+
+      /**
+       * Actualiza el cronómetro en la pantalla.
+       */
+      function actualizarTiempo() {
+        if (!tiempoInicio) return;
+        const segundos = Math.floor((new Date() - tiempoInicio) / 1000);
+        tiempoEl.innerText = `${segundos}s`;
+        actualizarEstadisticas(); // Actualizar PPM con el tiempo
+      }
+
+      /**
+       * Calcula y muestra las palabras por minuto, la precisión y los errores.
+       */
+      function actualizarEstadisticas() {
+        const segundosTranscurridos = tiempoInicio
+          ? (new Date() - tiempoInicio) / 1000
+          : 0;
+        const minutosTranscurridos = segundosTranscurridos / 60;
+
+        // Calcular Palabras por Minuto (PPM)
+        // Se considera una palabra como 5 caracteres (incluyendo espacios)
+        const caracteresCorrectos = indiceActual - errores;
+        const ppm =
+          minutosTranscurridos > 0
+            ? Math.round(caracteresCorrectos / 5 / minutosTranscurridos)
+            : 0;
+        ppmEl.innerText = ppm;
+
+        // Calcular Precisión
+        const precision =
+          indiceActual > 0
+            ? Math.round(((indiceActual - errores) / indiceActual) * 100)
+            : 100;
+        precisionEl.innerText = `${precision}%`;
+
+        // Actualizar Errores
+        erroresEl.innerText = errores;
+      }
+
+      // --- EVENT LISTENERS ---
+      entradaUsuario.addEventListener("keydown", manejarEntrada);
+      reiniciarBtn.addEventListener("click", iniciarNuevaPrueba);
+
+      // --- INICIO DE LA APLICACIÓN ---
+      // Cargar la primera prueba cuando la página esté lista
+      document.addEventListener("DOMContentLoaded", iniciarNuevaPrueba);
+    </script>
+  </body>
+</html>
