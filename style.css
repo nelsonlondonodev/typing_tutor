@@ -1,0 +1,39 @@
+/* Usaremos la fuente Inter para un look más limpio */
+body {
+  font-family: "Inter", sans-serif;
+}
+
+/* Estilos para el feedback visual del texto */
+#texto-a-escribir span {
+  transition: color 0.2s, background-color 0.2s;
+}
+
+/* Letra correcta: color verde */
+.correcto {
+  color: #4ade80; /* green-400 de Tailwind */
+}
+
+/* Letra incorrecta: color rojo y subrayado */
+.incorrecto {
+  color: #f87171; /* red-400 de Tailwind */
+  text-decoration: underline;
+  text-decoration-color: #f87171;
+}
+
+/* Cursor que indica la posición actual */
+.cursor {
+  background-color: #38bdf8; /* light-blue-400 de Tailwind */
+  border-radius: 2px;
+  animation: blink 1s infinite;
+}
+
+/* Animación de parpadeo para el cursor */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
